@@ -4,3 +4,11 @@
 Makefile
 
 Makefile\.in
+
+\.libs/
+
+kdtree\.lo
+
+kdtree\.o
+
+libkdtree\.la
