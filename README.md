@@ -1,3 +1,5 @@
-# kdtree (nipTK module)
+# Module kdtree {#page_module_kdtree}
+
+kdtree
 
 
