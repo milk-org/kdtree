@@ -116,7 +116,7 @@ static void free_resnode(struct res_node*);
 
 
 int init_kdtree()
-{
+{	
     return(0);
 }
 
