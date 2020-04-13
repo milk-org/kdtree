@@ -1,9 +1,29 @@
-project(lib_kdtree_project)
+# library name
+set(LIBNAME "milkkdtree")
+
+
+set(SOURCEFILES
+	kdtree.c)
+
+set(INCLUDEFILES
+	kdtree.h)
+
+
+# DEFAULT SETTINGS 
+# Do not change unless needed
+# =====================================================================
+
+project(lib_${LIBNAME}_project)
 
 include_directories ("${PROJECT_SOURCE_DIR}/src")
 include_directories ("${PROJECT_SOURCE_DIR}/..")
-add_library(kdtree SHARED kdtree.c)
 
-install(TARGETS kdtree DESTINATION lib)
-install(FILES kdtree.h DESTINATION include)
+
+# Library can be compiled from multiple source files
+# Convention: the main souce file is named <libname>.c
+# 
+add_library(${LIBNAME} SHARED ${SOURCEFILES})
+
+install(TARGETS ${LIBNAME} DESTINATION lib)
+install(FILES ${INCLUDEFILES} DESTINATION include)
 
