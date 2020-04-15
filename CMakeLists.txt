@@ -1,12 +1,13 @@
 # library name
 set(LIBNAME "milkkdtree")
+set(SRCNAME "kdtree")
 
 
 set(SOURCEFILES
-	kdtree.c)
+	${SRCNAME}.c)
 
 set(INCLUDEFILES
-	kdtree.h)
+	${SRCNAME}.h)
 
 
 # DEFAULT SETTINGS 
@@ -25,5 +26,5 @@ include_directories ("${PROJECT_SOURCE_DIR}/..")
 add_library(${LIBNAME} SHARED ${SOURCEFILES})
 
 install(TARGETS ${LIBNAME} DESTINATION lib)
-install(FILES ${INCLUDEFILES} DESTINATION include)
+install(FILES ${INCLUDEFILES} DESTINATION include/${SRCNAME})
 
