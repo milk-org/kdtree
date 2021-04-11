@@ -2,6 +2,8 @@
 set(LIBNAME "milkkdtree")
 set(SRCNAME "kdtree")
 
+message("")
+message(" SRCNAME = ${SRCNAME} -> LIBNAME = ${LIBNAME}")
 
 set(SOURCEFILES
 	${SRCNAME}.c)
