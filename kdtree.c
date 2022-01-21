@@ -44,7 +44,7 @@ OF SUCH DAMAGE.
 #else
 
 #ifndef I_WANT_THREAD_BUGS
-#error                                                                                                                 \
+#error                                                                         \
     "You are compiling with the fast list node allocator, with pthreads disabled! This WILL break if used from multiple threads."
 #endif /* I want thread bugs */
 
@@ -53,63 +53,69 @@ OF SUCH DAMAGE.
 
 struct kdhyperrect
 {
-    int dim;
+    int     dim;
     double *min, *max; /* minimum/maximum coords */
 };
 
 struct kdnode
 {
     double *pos;
-    int dir;
-    void *data;
+    int     dir;
+    void   *data;
 
     struct kdnode *left, *right; /* negative/positive side */
 };
 
 struct res_node
 {
-    struct kdnode *item;
-    double dist_sq;
+    struct kdnode   *item;
+    double           dist_sq;
     struct res_node *next;
 };
 
 struct kdtree
 {
-    int dim;
-    struct kdnode *root;
+    int                 dim;
+    struct kdnode      *root;
     struct kdhyperrect *rect;
     void (*destr)(void *);
 };
 
 struct kdres
 {
-    struct kdtree *tree;
+    struct kdtree   *tree;
     struct res_node *rlist, *riter;
-    int size;
+    int              size;
 };
 
 #define SQ(x) ((x) * (x))
 
 static void clear_rec(struct kdnode *node, void (*destr)(void *));
-static int insert_rec(struct kdnode **node, const double *pos, void *data, int dir, int dim);
-static int rlist_insert(struct res_node *list, struct kdnode *item, double dist_sq);
+static int  insert_rec(
+     struct kdnode **node, const double *pos, void *data, int dir, int dim);
+static int
+rlist_insert(struct res_node *list, struct kdnode *item, double dist_sq);
 static void clear_results(struct kdres *set);
 
-static struct kdhyperrect *hyperrect_create(int dim, const double *min, const double *max);
+static struct kdhyperrect             *
+hyperrect_create(int dim, const double *min, const double *max);
 static void hyperrect_free(struct kdhyperrect *rect);
 static struct kdhyperrect *hyperrect_duplicate(const struct kdhyperrect *rect);
-static void hyperrect_extend(struct kdhyperrect *rect, const double *pos);
+static void   hyperrect_extend(struct kdhyperrect *rect, const double *pos);
 static double hyperrect_dist_sq(struct kdhyperrect *rect, const double *pos);
 
 #ifdef USE_LIST_NODE_ALLOCATOR
 static struct res_node *alloc_resnode(void);
-static void free_resnode(struct res_node *);
+static void             free_resnode(struct res_node *);
 #else
 #define alloc_resnode() malloc(sizeof(struct res_node))
 #define free_resnode(n) free(n)
 #endif
 
-int init_kdtree() { return (0); }
+int init_kdtree()
+{
+    return (0);
+}
 
 struct kdtree *kd_create(int k)
 {
@@ -120,10 +126,10 @@ struct kdtree *kd_create(int k)
         return 0;
     }
 
-    tree->dim = k;
-    tree->root = 0;
+    tree->dim   = k;
+    tree->root  = 0;
     tree->destr = 0;
-    tree->rect = 0;
+    tree->rect  = 0;
 
     return tree;
 }
@@ -165,11 +171,15 @@ void kd_clear(struct kdtree *tree)
     }
 }
 
-void kd_data_destructor(struct kdtree *tree, void (*destr)(void *)) { tree->destr = destr; }
-
-static int insert_rec(struct kdnode **nptr, const double *pos, void *data, int dir, int dim)
+void kd_data_destructor(struct kdtree *tree, void (*destr)(void *))
 {
-    int new_dir;
+    tree->destr = destr;
+}
+
+static int insert_rec(
+    struct kdnode **nptr, const double *pos, void *data, int dir, int dim)
+{
+    int            new_dir;
     struct kdnode *node;
 
     if (!*nptr)
@@ -185,13 +195,13 @@ static int insert_rec(struct kdnode **nptr, const double *pos, void *data, int d
         }
         memcpy(node->pos, pos, dim * sizeof *node->pos);
         node->data = data;
-        node->dir = dir;
+        node->dir  = dir;
         node->left = node->right = 0;
-        *nptr = node;
+        *nptr                    = node;
         return 0;
     }
 
-    node = *nptr;
+    node    = *nptr;
     new_dir = (node->dir + 1) % dim;
     if (pos[node->dir] < node->pos[node->dir])
     {
@@ -222,8 +232,8 @@ int kd_insert(struct kdtree *tree, const double *pos, void *data)
 int kd_insertf(struct kdtree *tree, const float *pos, void *data)
 {
     static double sbuf[16];
-    double *bptr, *buf = 0;
-    int res, dim = tree->dim;
+    double       *bptr, *buf = 0;
+    int           res, dim   = tree->dim;
 
     int mallocflag = 0;
 
@@ -242,7 +252,7 @@ int kd_insertf(struct kdtree *tree, const float *pos, void *data)
     else
     {
         mallocflag = 1;
-        bptr = sbuf;
+        bptr       = sbuf;
     }
 
     while (dim-- > 0)
@@ -278,11 +288,15 @@ int kd_insert3f(struct kdtree *tree, float x, float y, float z, void *data)
     return kd_insert(tree, buf, data);
 }
 
-static int find_nearest(struct kdnode *node, const double *pos, double range, struct res_node *list, int ordered,
-                        int dim)
+static int find_nearest(struct kdnode   *node,
+                        const double    *pos,
+                        double           range,
+                        struct res_node *list,
+                        int              ordered,
+                        int              dim)
 {
     double dist_sq, dx;
-    int i, ret, added_res = 0;
+    int    i, ret, added_res = 0;
 
     if (!node)
         return 0;
@@ -303,11 +317,21 @@ static int find_nearest(struct kdnode *node, const double *pos, double range, st
 
     dx = pos[node->dir] - node->pos[node->dir];
 
-    ret = find_nearest(dx <= 0.0 ? node->left : node->right, pos, range, list, ordered, dim);
+    ret = find_nearest(dx <= 0.0 ? node->left : node->right,
+                       pos,
+                       range,
+                       list,
+                       ordered,
+                       dim);
     if (ret >= 0 && fabs(dx) < range)
     {
         added_res += ret;
-        ret = find_nearest(dx <= 0.0 ? node->right : node->left, pos, range, list, ordered, dim);
+        ret = find_nearest(dx <= 0.0 ? node->right : node->left,
+                           pos,
+                           range,
+                           list,
+                           ordered,
+                           dim);
     }
     if (ret == -1)
     {
@@ -368,36 +392,39 @@ static int find_nearest_n(struct kdnode *node, const double *pos, double range, 
 }
 #endif
 
-static void kd_nearest_i(struct kdnode *node, const double *pos, struct kdnode **result, double *result_dist_sq,
+static void kd_nearest_i(struct kdnode      *node,
+                         const double       *pos,
+                         struct kdnode     **result,
+                         double             *result_dist_sq,
                          struct kdhyperrect *rect)
 {
-    int dir = node->dir;
-    int i;
-    double dummy, dist_sq;
+    int            dir = node->dir;
+    int            i;
+    double         dummy, dist_sq;
     struct kdnode *nearer_subtree, *farther_subtree;
-    double *nearer_hyperrect_coord, *farther_hyperrect_coord;
+    double        *nearer_hyperrect_coord, *farther_hyperrect_coord;
 
     /* Decide whether to go left or right in the tree */
     dummy = pos[dir] - node->pos[dir];
     if (dummy <= 0)
     {
-        nearer_subtree = node->left;
-        farther_subtree = node->right;
-        nearer_hyperrect_coord = rect->max + dir;
+        nearer_subtree          = node->left;
+        farther_subtree         = node->right;
+        nearer_hyperrect_coord  = rect->max + dir;
         farther_hyperrect_coord = rect->min + dir;
     }
     else
     {
-        nearer_subtree = node->right;
-        farther_subtree = node->left;
-        nearer_hyperrect_coord = rect->min + dir;
+        nearer_subtree          = node->right;
+        farther_subtree         = node->left;
+        nearer_hyperrect_coord  = rect->min + dir;
         farther_hyperrect_coord = rect->max + dir;
     }
 
     if (nearer_subtree)
     {
         /* Slice the hyperrect to get the hyperrect of the nearer subtree */
-        dummy = *nearer_hyperrect_coord;
+        dummy                   = *nearer_hyperrect_coord;
         *nearer_hyperrect_coord = node->pos[dir];
         /* Recurse down into nearer subtree */
         kd_nearest_i(nearer_subtree, pos, result, result_dist_sq, rect);
@@ -414,14 +441,14 @@ static void kd_nearest_i(struct kdnode *node, const double *pos, struct kdnode *
     }
     if (dist_sq < *result_dist_sq)
     {
-        *result = node;
+        *result         = node;
         *result_dist_sq = dist_sq;
     }
 
     if (farther_subtree)
     {
         /* Get the hyperrect of the farther subtree */
-        dummy = *farther_hyperrect_coord;
+        dummy                    = *farther_hyperrect_coord;
         *farther_hyperrect_coord = node->pos[dir];
         /* Check if we have to recurse down by calculating the closest
          * point of the hyperrect and see if it's closer than our
@@ -439,10 +466,10 @@ static void kd_nearest_i(struct kdnode *node, const double *pos, struct kdnode *
 struct kdres *kd_nearest(struct kdtree *kd, const double *pos)
 {
     struct kdhyperrect *rect;
-    struct kdnode *result;
-    struct kdres *rset;
-    double dist_sq;
-    int i;
+    struct kdnode      *result;
+    struct kdres       *rset;
+    double              dist_sq;
+    int                 i;
 
     if (!kd)
         return 0;
@@ -460,7 +487,7 @@ struct kdres *kd_nearest(struct kdtree *kd, const double *pos)
         return 0;
     }
     rset->rlist->next = 0;
-    rset->tree = kd;
+    rset->tree        = kd;
 
     /* Duplicate the bounding hyperrectangle, we will work on the copy */
     if (!(rect = hyperrect_duplicate(kd->rect)))
@@ -470,7 +497,7 @@ struct kdres *kd_nearest(struct kdtree *kd, const double *pos)
     }
 
     /* Our first guesstimate is the root node */
-    result = kd->root;
+    result  = kd->root;
     dist_sq = 0;
     for (i = 0; i < kd->dim; i++)
         dist_sq += SQ(result->pos[i] - pos[i]);
@@ -503,8 +530,8 @@ struct kdres *kd_nearest(struct kdtree *kd, const double *pos)
 struct kdres *kd_nearestf(struct kdtree *tree, const float *pos)
 {
     static double sbuf[16];
-    double *bptr, *buf = 0;
-    int dim = tree->dim;
+    double       *bptr, *buf = 0;
+    int           dim = tree->dim;
     struct kdres *res;
 
     int mallocflag = 0;
@@ -524,7 +551,7 @@ struct kdres *kd_nearestf(struct kdtree *tree, const float *pos)
     else
     {
         mallocflag = 1;
-        bptr = sbuf;
+        bptr       = sbuf;
     }
 
     while (dim-- > 0)
@@ -560,9 +587,10 @@ struct kdres *kd_nearest3f(struct kdtree *tree, float x, float y, float z)
     return kd_nearest(tree, pos);
 }
 
-struct kdres *kd_nearest_range(struct kdtree *kd, const double *pos, double range)
+struct kdres *
+kd_nearest_range(struct kdtree *kd, const double *pos, double range)
 {
-    int ret;
+    int           ret;
     struct kdres *rset;
 
     if (!(rset = malloc(sizeof *rset)))
@@ -575,9 +603,10 @@ struct kdres *kd_nearest_range(struct kdtree *kd, const double *pos, double rang
         return 0;
     }
     rset->rlist->next = 0;
-    rset->tree = kd;
+    rset->tree        = kd;
 
-    if ((ret = find_nearest(kd->root, pos, range, rset->rlist, 0, kd->dim)) == -1)
+    if ((ret = find_nearest(kd->root, pos, range, rset->rlist, 0, kd->dim)) ==
+        -1)
     {
         kd_res_free(rset);
         return 0;
@@ -587,11 +616,12 @@ struct kdres *kd_nearest_range(struct kdtree *kd, const double *pos, double rang
     return rset;
 }
 
-struct kdres *kd_nearest_rangef(struct kdtree *kd, const float *pos, float range)
+struct kdres *
+kd_nearest_rangef(struct kdtree *kd, const float *pos, float range)
 {
     static double sbuf[16];
-    double *bptr, *buf = 0;
-    int dim = kd->dim;
+    double       *bptr, *buf = 0;
+    int           dim = kd->dim;
     struct kdres *res;
 
     int mallocflag = 0;
@@ -613,7 +643,7 @@ struct kdres *kd_nearest_rangef(struct kdtree *kd, const float *pos, float range
     else
     {
         mallocflag = 1;
-        bptr = sbuf;
+        bptr       = sbuf;
     }
 
     while (dim-- > 0)
@@ -631,7 +661,8 @@ struct kdres *kd_nearest_rangef(struct kdtree *kd, const float *pos, float range
     return res;
 }
 
-struct kdres *kd_nearest_range3(struct kdtree *tree, double x, double y, double z, double range)
+struct kdres *kd_nearest_range3(
+    struct kdtree *tree, double x, double y, double z, double range)
 {
     double buf[3];
     buf[0] = x;
@@ -640,7 +671,8 @@ struct kdres *kd_nearest_range3(struct kdtree *tree, double x, double y, double 
     return kd_nearest_range(tree, buf, range);
 }
 
-struct kdres *kd_nearest_range3f(struct kdtree *tree, float x, float y, float z, float range)
+struct kdres *
+kd_nearest_range3f(struct kdtree *tree, float x, float y, float z, float range)
 {
     double buf[3];
     buf[0] = x;
@@ -656,11 +688,20 @@ void kd_res_free(struct kdres *rset)
     free(rset);
 }
 
-int kd_res_size(struct kdres *set) { return (set->size); }
+int kd_res_size(struct kdres *set)
+{
+    return (set->size);
+}
 
-void kd_res_rewind(struct kdres *rset) { rset->riter = rset->rlist->next; }
+void kd_res_rewind(struct kdres *rset)
+{
+    rset->riter = rset->rlist->next;
+}
 
-int kd_res_end(struct kdres *rset) { return rset->riter == 0; }
+int kd_res_end(struct kdres *rset)
+{
+    return rset->riter == 0;
+}
 
 int kd_res_next(struct kdres *rset)
 {
@@ -726,12 +767,16 @@ void *kd_res_item3f(struct kdres *rset, float *x, float *y, float *z)
     return 0;
 }
 
-void *kd_res_item_data(struct kdres *set) { return kd_res_item(set, 0); }
+void *kd_res_item_data(struct kdres *set)
+{
+    return kd_res_item(set, 0);
+}
 
 /* ---- hyperrectangle helpers ---- */
-static struct kdhyperrect *hyperrect_create(int dim, const double *min, const double *max)
+static struct kdhyperrect *
+hyperrect_create(int dim, const double *min, const double *max)
 {
-    size_t size = dim * sizeof(double);
+    size_t              size = dim * sizeof(double);
     struct kdhyperrect *rect = 0;
 
     if (!(rect = malloc(sizeof(struct kdhyperrect))))
@@ -788,7 +833,7 @@ static void hyperrect_extend(struct kdhyperrect *rect, const double *pos)
 
 static double hyperrect_dist_sq(struct kdhyperrect *rect, const double *pos)
 {
-    int i;
+    int    i;
     double result = 0;
 
     for (i = 0; i < rect->dim; i++)
@@ -830,7 +875,7 @@ static struct res_node *alloc_resnode(void)
     }
     else
     {
-        node = free_nodes;
+        node       = free_nodes;
         free_nodes = free_nodes->next;
         node->next = 0;
     }
@@ -859,7 +904,8 @@ static void free_resnode(struct res_node *node)
 
 /* inserts the item. if dist_sq is >= 0, then do an ordered insert */
 /* TODO make the ordering code use heapsort */
-static int rlist_insert(struct res_node *list, struct kdnode *item, double dist_sq)
+static int
+rlist_insert(struct res_node *list, struct kdnode *item, double dist_sq)
 {
     struct res_node *rnode;
 
@@ -867,7 +913,7 @@ static int rlist_insert(struct res_node *list, struct kdnode *item, double dist_
     {
         return -1;
     }
-    rnode->item = item;
+    rnode->item    = item;
     rnode->dist_sq = dist_sq;
 
     if (dist_sq >= 0.0)
@@ -878,7 +924,7 @@ static int rlist_insert(struct res_node *list, struct kdnode *item, double dist_
         }
     }
     rnode->next = list->next;
-    list->next = rnode;
+    list->next  = rnode;
     return 0;
 }
 
@@ -889,7 +935,7 @@ static void clear_results(struct kdres *rset)
     while (node)
     {
         struct res_node *tmp;
-        tmp = node;
+        tmp  = node;
         node = node->next;
         free_resnode(tmp);
     }
